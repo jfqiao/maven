@@ -84,6 +84,8 @@ public class DefaultClassRealmManager
 
     private final ClassRealm mavenApiRealm;
 
+    private final ClassLoader contextClassLoader;
+
     /**
      * Patterns of artifacts provided by maven core and exported via maven api realm. These artifacts are filtered from
      * plugin and build extensions realms to avoid presence of duplicate and possibly conflicting classes on classpath.
@@ -94,6 +96,8 @@ public class DefaultClassRealmManager
     public DefaultClassRealmManager( Logger logger, PlexusContainer container,
                                      List<ClassRealmManagerDelegate> delegates, CoreExportsProvider exports )
     {
+        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+        this.contextClassLoader = contextClassLoader == null ? ClassLoader.getSystemClassLoader() : contextClassLoader;
         this.logger = logger;
         this.world = ( (MutablePlexusContainer) container ).getClassWorld();
         this.containerRealm = container.getContainerRealm();
@@ -120,9 +124,7 @@ public class DefaultClassRealmManager
             {
                 try
                 {
-                    ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-                    ClassRealm classRealm = world.newRealm( realmId, contextClassLoader == null
-                            ? ClassLoader.getSystemClassLoader() : contextClassLoader );
+                    ClassRealm classRealm = world.newRealm( realmId, contextClassLoader );
 
                     if ( logger.isDebugEnabled() )
                     {
